@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QLabel, QMainWindow, QToolBar, QStatusBar
+from PyQt5.QtWidgets import QFileDialog, QLabel, QMainWindow, QToolBar, QStatusBar
 from PyQt5.QtCore import Qt, QSize
 from .buttons import buttons
+from .import_files import read_filenames, get_studies
 
 
 class MainWindow(QMainWindow):
@@ -30,6 +31,9 @@ class MainWindow(QMainWindow):
 
     def onDicomImportBarButtonClick(self, s):
         print("DICOM Import", s)
+        dicom_path = QFileDialog.getExistingDirectory(self, "Select Folder")
+        dicom_files = read_filenames(dicom_path)
+        studies = get_studies(dicom_files)
 
     def onDicomExportBarButtonClick(self, s):
         print("Dicom Export", s)
