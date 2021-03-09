@@ -46,6 +46,11 @@ def get_studies(dicom_files: List[str]) -> List:
         pydicom.read_file(file, force=True)
         for file in dicom_files
     ]
+    for dicom_data in dicom_datas:
+        if not 'StudyDescription' in dicom_data:
+            dicom_data.StudyDescription = "default"
+        if not 'SeriesDescription' in dicom_data:
+            dicom_data.SeriesDescription = "default"
     studies = []
     for item in [list(it) for k, it in groupby(dicom_datas, study_projection)]:
         groupped_by_series = [list(it)
