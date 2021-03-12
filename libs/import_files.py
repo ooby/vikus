@@ -8,12 +8,12 @@ from typing import List
 
 def series_projection(val):
     '''Projection by SeriesDescription'''
-    return val.SeriesDescription
+    return val.SeriesInstanceUID
 
 
 def study_projection(val):
     '''Projection by StudyDescription'''
-    return val.StudyDescription
+    return val.StudyInstanceUID
 
 
 def is_dicom(path: str) -> bool:
