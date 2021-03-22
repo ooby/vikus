@@ -1,4 +1,6 @@
 from datetime import datetime
+
+
 def get_studies_metadata(studies):
     results = []
     for study in studies:
