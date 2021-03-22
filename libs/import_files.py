@@ -56,6 +56,9 @@ def get_studies(dicom_files: List[str]) -> List:
         groupped_by_series = [list(it)
                               for k, it in groupby(item, series_projection)]
         studies.append(groupped_by_series)
+    for study in studies:
+        for series in study:
+            series.sort(key=lambda x: float(x.ImagePositionPatient[2]), reverse=True)
     return studies
 
 
@@ -77,3 +80,16 @@ def get_pixels(slices: np.ndarray) -> np.ndarray:
             image[slice_number] = image[slice_number].astype(np.int16)
         image[slice_number] += np.int16(intercept)
     return np.array(image, dtype=np.int16)
+
+
+def windowed_rgb(pixels: np.ndarray, min_hu: int = 0, max_hu: int = 0) -> np.ndarray:
+    if min_hu == 0 and max_hu == 0:
+        min_hu = np.min(pixels)
+        max_hu = np.max(pixels)
+    abs_delta = abs(max_hu - min_hu)
+    pixels_value = (abs(pixels - min_hu) / abs_delta) * 255
+    rgb_pixels = np.zeros((*pixels.shape, 3), dtype=np.uint8)
+    rgb_pixels[..., 0] = pixels_value.astype(np.uint8)
+    rgb_pixels[..., 1] = pixels_value.astype(np.uint8)
+    rgb_pixels[..., 2] = pixels_value.astype(np.uint8)
+    return rgb_pixels
