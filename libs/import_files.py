@@ -58,7 +58,8 @@ def get_studies(dicom_files: List[str]) -> List:
         studies.append(groupped_by_series)
     for study in studies:
         for series in study:
-            series.sort(key=lambda x: float(x.ImagePositionPatient[2]), reverse=True)
+            series.sort(key=lambda x: float(
+                x.ImagePositionPatient[2]), reverse=True)
     return studies
 
 
@@ -76,7 +77,8 @@ def get_pixels(slices: np.ndarray) -> np.ndarray:
         intercept = slices[slice_number].RescaleIntercept
         slope = slices[slice_number].RescaleSlope
         if slope != 1:
-            image[slice_number] = slope * image[slice_number].astype(np.float64)
+            image[slice_number] = slope * \
+                image[slice_number].astype(np.float64)
             image[slice_number] = image[slice_number].astype(np.int16)
         image[slice_number] += np.int16(intercept)
     return np.array(image, dtype=np.int16)

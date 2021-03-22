@@ -2,7 +2,7 @@ import numpy as np
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QTableWidgetItem, QToolBar, QStatusBar, QWidget
 from .buttons import buttons
-from .import_files import get_studies, read_filenames
+from .import_files import get_pixels, get_studies, read_filenames
 from .utils import get_studies_metadata
 from .widgets import DicomExpressView, DicomList
 
@@ -11,12 +11,14 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setStyleSheet("background-color: #f1f2fa;")
-        self.setWindowTitle("IRIS Viewer")
+        self.setWindowTitle("Vikus DICOM Viewer")
         self.setMinimumSize(1280, 720)
         self.studies_list = []
         self.express_pixels = np.zeros((512, 512))
-        self.express_view = DicomExpressView(self.studies_list, self.express_pixels)
-        self.studies_navigation_list = DicomList(self.studies_list, self.express_view)
+        self.express_view = DicomExpressView(
+            self.studies_list, self.express_pixels)
+        self.studies_navigation_list = DicomList(
+            self.studies_list, self.express_view)
 
         self.UiComponents()
 
@@ -71,6 +73,9 @@ class MainWindow(QMainWindow):
                     "data": study_data
                 })
                 i += 1
+            study = self.studies_list[0]["data"][0]
+            pixels = get_pixels(study)
+            DicomExpressView.updateConvertPixmap(self.express_view, pixels, 0)
 
     def onDicomExportBarButtonClick(self, s):
         print("Dicom Export", s)

@@ -25,7 +25,8 @@ class DicomList(QTableWidget):
             if item is not None:
                 study = self.studies_list[int(item.row())]["data"][0]
                 pixels = get_pixels(study)
-                DicomExpressView.updateConvertPixmap(self.express_view, pixels, 0)
+                DicomExpressView.updateConvertPixmap(
+                    self.express_view, pixels, 0)
         return super(DicomList, self).eventFilter(source, event)
 
 
@@ -40,7 +41,32 @@ class DicomExpressView(QLabel):
         self.pixmap = QPixmap(qimage)
         self.installEventFilter(self)
         self.setPixmap(self.pixmap)
+    
+    def mousePressEvent(self, event):
+        if hasattr(self, 'pixels') and len(self.pixels) > 0:
+            self.prev_x = event.pos().x()
+            self.prev_y = event.pos().y()
+        return super(DicomExpressView, self).mousePressEvent(event)
 
+    def mouseMoveEvent(self, event):
+        if hasattr(self, 'pixels') and len(self.pixels) > 0:
+            if (event.buttons() == Qt.LeftButton):
+                curr_x = event.pos().x()
+                x_diff = curr_x - self.prev_x
+                self.prev_x = curr_x
+                curr_y = event.pos().y()
+                y_diff = curr_y - self.prev_y
+                self.prev_y = curr_y
+                self.window += 2 * x_diff
+                self.level += y_diff                
+                # print(self.window, self.level)
+        min_hu = self.level - self.window // 2
+        max_hu = self.level + self.window // 2
+        pixels = np.where(self.pixels < min_hu, min_hu, self.pixels)
+        pixels = np.where(pixels > max_hu, max_hu, pixels)
+        self.rgb_pixels = windowed_rgb(pixels, min_hu, max_hu)
+        self.updatePixmap(self.position)
+        return super(DicomExpressView, self).mouseMoveEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         delta = event.angleDelta().y()
@@ -52,9 +78,8 @@ class DicomExpressView(QLabel):
             self.position -= 1
             if self.position < 1:
                 self.position = self.pixels_length - 1
-        self.updatePixmap(self.position)  
+        self.updatePixmap(self.position)
         return super(DicomExpressView, self).wheelEvent(event)
-    
 
     def updatePixmap(self, position):
         pixels_to_set = self.rgb_pixels[position]
@@ -63,9 +88,10 @@ class DicomExpressView(QLabel):
         self.pixmap = QPixmap(qimage)
         self.setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio))
 
-
     def updateConvertPixmap(self, image, position):
         self.pixels = image
+        self.window = abs(np.max(self.pixels) - np.min(self.pixels))
+        self.level = np.max(self.pixels) - (self.window // 2)
         self.pixels_length = len(image)
         self.rgb_pixels = windowed_rgb(image)
         self.position = position
