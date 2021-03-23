@@ -1,5 +1,7 @@
 import numpy as np
+import os
 from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QTableWidgetItem, QToolBar, QStatusBar, QWidget
 from .buttons import buttons
 from .import_files import get_pixels, get_studies, read_filenames
@@ -42,7 +44,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
         self.addToolBar(toolbar)
-        self.setStatusBar(QStatusBar(self))
+        self.statusBar = QStatusBar(self)
+        self.setStatusBar(self.statusBar)
 
     def onDicomImportBarButtonClick(self, s):
         dicom_path = QFileDialog.getExistingDirectory(self, "Select Folder")
@@ -53,20 +56,32 @@ class MainWindow(QMainWindow):
             i = len(self.studies_list)
             for study_metadata, study_data in zip(imported_studies_metadata, imported_studies):
                 self.studies_navigation_list.setRowCount(i + 1)
-                self.studies_navigation_list.setItem(
-                    i, 0, QTableWidgetItem(study_metadata["patient_name"]))
-                self.studies_navigation_list.setItem(
-                    i, 1, QTableWidgetItem(study_metadata["patient_id"]))
-                self.studies_navigation_list.setItem(
-                    i, 2, QTableWidgetItem(study_metadata["study_description"]))
-                self.studies_navigation_list.setItem(
-                    i, 3, QTableWidgetItem(study_metadata["modality"]))
-                self.studies_navigation_list.setItem(
-                    i, 4, QTableWidgetItem(study_metadata["study_id"]))
-                self.studies_navigation_list.setItem(
-                    i, 5, QTableWidgetItem(study_metadata["study_date"]))
-                self.studies_navigation_list.setItem(
-                    i, 6, QTableWidgetItem(study_metadata["study_time"]))
+                if i % 2 == 0:
+                    bgr = "#FFFFFF"
+                else:
+                    bgr = "#F2F4F9"
+                column_0 = QTableWidgetItem(study_metadata["patient_name"])
+                column_0.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 0, column_0)
+                column_1 = QTableWidgetItem(study_metadata["patient_id"])
+                column_1.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 1, column_1)
+                column_2 = QTableWidgetItem(
+                    study_metadata["study_description"])
+                column_2.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 2, column_2)
+                column_3 = QTableWidgetItem(study_metadata["modality"])
+                column_3.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 3, column_3)
+                column_4 = QTableWidgetItem(study_metadata["study_id"])
+                column_4.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 4, column_4)
+                column_5 = QTableWidgetItem(study_metadata["study_date"])
+                column_5.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 5, column_5)
+                column_6 = QTableWidgetItem(study_metadata["study_time"])
+                column_6.setBackground(QColor(bgr))
+                self.studies_navigation_list.setItem(i, 6, column_6)
                 self.studies_navigation_list.resizeColumnsToContents()
                 self.studies_list.append({
                     "id": i,
@@ -75,10 +90,36 @@ class MainWindow(QMainWindow):
                 i += 1
             study = self.studies_list[0]["data"][0]
             pixels = get_pixels(study)
-            DicomExpressView.updateConvertPixmap(self.express_view, pixels, 0)
+            DicomExpressView.updateConvertPixmap(
+                self.express_view, study, pixels, 0)
+            self.statusBar.showMessage("Studies imported. Ready")
 
     def onDicomExportBarButtonClick(self, s):
-        print("Dicom Export", s)
+        items = self.studies_navigation_list.selectedIndexes()
+        if len(items) > 0:
+            export_indexes = []
+            for item in items:
+                export_indexes.append(item.row())
+            dicom_path = QFileDialog.getExistingDirectory(
+                self, "Select Folder")
+            studies_to_export = []
+            for export_index in export_indexes:
+                for study in self.studies_list:
+                    if int(study["id"]) == int(export_index):
+                        studies_to_export.append(study["data"])
+            for study_to_export in studies_to_export:
+                for series in study_to_export:
+                    for i, sop_instance in enumerate(series):
+                        study_description = str(
+                            sop_instance.StudyDescription).strip()
+                        series_description = str(
+                            sop_instance.SeriesDescription).strip()
+                        image_filename = os.path.abspath(os.path.join(
+                            dicom_path, study_description, series_description, str(i).zfill(6) + ".dcm"))
+                        os.makedirs(os.path.abspath(os.path.join(
+                            dicom_path, study_description, series_description)), exist_ok=True)
+                        sop_instance.save_as(image_filename)
+            self.statusBar.showMessage("Study exported. Ready")
 
     def onQueryBarButtonClick(self, s):
         print("Query/Retrieve", s)
