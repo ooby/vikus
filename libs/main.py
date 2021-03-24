@@ -1,24 +1,26 @@
 import numpy as np
 import os
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, QThreadPool
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QTableWidgetItem, QToolBar, QStatusBar, QWidget
 from .buttons import buttons
 from .import_files import get_pixels, get_studies, read_filenames
 from .utils import get_studies_metadata
-from .widgets import DicomExpressView, DicomList
+from .dicom_express_view import DicomExpressView
+from .dicom_list import DicomList
 
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        self.pool = QThreadPool.globalInstance()
         self.setStyleSheet("background-color: #f1f2fa;")
         self.setWindowTitle("Vikus DICOM Viewer")
         self.setMinimumSize(1280, 720)
         self.studies_list = []
         self.express_pixels = np.zeros((512, 512))
         self.express_view = DicomExpressView(
-            self.studies_list, self.express_pixels)
+            self.pool, self.studies_list, self.express_pixels)
         self.studies_navigation_list = DicomList(
             self.studies_list, self.express_view)
 
@@ -89,9 +91,15 @@ class MainWindow(QMainWindow):
                 })
                 i += 1
             study = self.studies_list[0]["data"][0]
+            if 'WindowCenter' in study and 'WindowWidth' in study:
+                level = study.WindowCenter
+                window = study.WindowWidth
+            else:
+                level = -5000
+                window = 0
             pixels = get_pixels(study)
             DicomExpressView.updateConvertPixmap(
-                self.express_view, study, pixels, 0)
+                self.express_view, study, pixels, 0, level, window)
             self.statusBar.showMessage("Studies imported. Ready")
 
     def onDicomExportBarButtonClick(self, s):
@@ -102,24 +110,25 @@ class MainWindow(QMainWindow):
                 export_indexes.append(item.row())
             dicom_path = QFileDialog.getExistingDirectory(
                 self, "Select Folder")
-            studies_to_export = []
-            for export_index in export_indexes:
-                for study in self.studies_list:
-                    if int(study["id"]) == int(export_index):
-                        studies_to_export.append(study["data"])
-            for study_to_export in studies_to_export:
-                for series in study_to_export:
-                    for i, sop_instance in enumerate(series):
-                        study_description = str(
-                            sop_instance.StudyDescription).strip()
-                        series_description = str(
-                            sop_instance.SeriesDescription).strip()
-                        image_filename = os.path.abspath(os.path.join(
-                            dicom_path, study_description, series_description, str(i).zfill(6) + ".dcm"))
-                        os.makedirs(os.path.abspath(os.path.join(
-                            dicom_path, study_description, series_description)), exist_ok=True)
-                        sop_instance.save_as(image_filename)
-            self.statusBar.showMessage("Study exported. Ready")
+            if len(dicom_path) > 0:
+                studies_to_export = []
+                for export_index in export_indexes:
+                    for study in self.studies_list:
+                        if int(study["id"]) == int(export_index):
+                            studies_to_export.append(study["data"])
+                for study_to_export in studies_to_export:
+                    for series in study_to_export:
+                        for i, sop_instance in enumerate(series):
+                            study_description = str(
+                                sop_instance.StudyDescription).strip()
+                            series_description = str(
+                                sop_instance.SeriesDescription).strip()
+                            image_filename = os.path.abspath(os.path.join(
+                                dicom_path, study_description, series_description, str(i).zfill(6) + ".dcm"))
+                            os.makedirs(os.path.abspath(os.path.join(
+                                dicom_path, study_description, series_description)), exist_ok=True)
+                            sop_instance.save_as(image_filename)
+                self.statusBar.showMessage("Study exported. Ready")
 
     def onQueryBarButtonClick(self, s):
         print("Query/Retrieve", s)
