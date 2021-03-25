@@ -1,6 +1,5 @@
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget
-from PyQt5.QtGui import QFontDatabase
 from .dicom_express_view import DicomExpressView
 from .import_files import get_pixels
 
@@ -19,7 +18,6 @@ class DicomList(QTableWidget):
             "Date acquired", "Time acquired"
         ])
         self.viewport().installEventFilter(self)
-        _id = QFontDatabase.addApplicationFont("fonts/Rokkitt-Light.ttf")
 
     def eventFilter(self, source, event):
         if (event.type() == QEvent.MouseButtonPress and
