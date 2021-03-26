@@ -25,10 +25,11 @@ class DicomExpressView(QLabel):
         self.rgb_pixels = res
 
     def process_complete(self):
-        # TODO: lock current pixels from modification before all threads complete
-        self.updatePixmap(self.position)
+        if self.temporary_position != self.position:
+            self.updatePixmap(self.position)
 
     def runTasks(self):
+        self.temporary_position = self.position
         worker = Worker(self.worker_wrapper)
         worker.signals.result.connect(self.process_result)
         worker.signals.finished.connect(self.process_complete)
@@ -42,15 +43,14 @@ class DicomExpressView(QLabel):
 
     def mouseReleaseEvent(self, event):
         if hasattr(self, 'pixels') and len(self.pixels) > 0:
-            # TODO: convert near slices before runTasks()
-            # indices = []
-            # for ind in range(1, 6):
-            #     pos_ind = self.position + ind
-            #     indices.append(pos_ind)
-            #     neg_ind = self.position - ind
-            #     indices.append(neg_ind)
-            # pixels = np.take(self.pixels, indices)
-            # pixels = windowed_rgb(pixels, self.level, self.window)
+            # TODO: check near 10 slices RGB-form in case of multiple conversion
+            neg_delta = pos_delta = 10
+            if self.position - neg_delta < 0:
+                neg_delta = self.position
+            if len(self.pixels) - self.position < pos_delta:
+                pos_delta = len(self.pixels) - 1 - self.position
+            self.rgb_pixels[self.position - neg_delta:self.position + pos_delta] = windowed_rgb(
+                self.pixels[self.position - neg_delta:self.position + pos_delta], self.level, self.window)
             self.runTasks()
         return super(DicomExpressView, self).mousePressEvent(event)
 
@@ -91,6 +91,9 @@ class DicomExpressView(QLabel):
                 self.position = self.pixels_length - 1
         self.updatePixmap(self.position)
         return super(DicomExpressView, self).wheelEvent(event)
+
+    def get_current_position(self):
+        return self.position
 
     def updatePixmap(self, position):
         pixels_to_set = self.rgb_pixels[position]

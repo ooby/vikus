@@ -21,6 +21,15 @@ def buttons(window_class, toolbar):
 
     toolbar.addSeparator()
 
+    share_button_action = QAction(
+        QIcon("icons/share_32.png"), "Share", window_class)
+    share_button_action.setStatusTip("Share")
+    share_button_action.setText("Share")
+    share_button_action.triggered.connect(window_class.onShareBarButtonClick)
+    toolbar.addAction(share_button_action)
+
+    toolbar.addSeparator()
+
     query_button_action = QAction(
         QIcon("icons/query_32.png"), "Query/Retrieve", window_class)
     query_button_action.setStatusTip("Query/Retrieve")
@@ -66,12 +75,3 @@ def buttons(window_class, toolbar):
     delete_button_action.setText("Delete")
     delete_button_action.triggered.connect(window_class.onDeleteBarButtonClick)
     toolbar.addAction(delete_button_action)
-
-    toolbar.addSeparator()
-
-    email_button_action = QAction(
-        QIcon("icons/email_32.png"), "Email", window_class)
-    email_button_action.setStatusTip("Email")
-    email_button_action.setText("Email")
-    email_button_action.triggered.connect(window_class.onEmailBarButtonClick)
-    toolbar.addAction(email_button_action)
