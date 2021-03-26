@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.pool = QThreadPool.globalInstance()
         _id = QFontDatabase.addApplicationFont("fonts/Rokkitt-Light.ttf")
         self.setStyleSheet("background-color: #f1f2fa;")
-        self.setWindowTitle("Vikus DICOM Viewer")
+        self.setWindowTitle("IRIS-Viewer")
         self.setMinimumSize(1280, 720)
         self.studies_list = []
         self.express_pixels = np.zeros((512, 512))
@@ -132,6 +132,9 @@ class MainWindow(QMainWindow):
                             sop_instance.save_as(image_filename)
                 self.statusBar.showMessage("Study exported. Ready")
 
+    def onShareBarButtonClick(self, s):
+        print("Email", s)
+
     def onQueryBarButtonClick(self, s):
         print("Query/Retrieve", s)
 
@@ -145,17 +148,16 @@ class MainWindow(QMainWindow):
         print("Burn", s)
 
     def onMetadataBarButtonClick(self, s):
-        # TODO: bind metadata info to current showing pixels
         items = self.studies_navigation_list.selectedIndexes()
         if len(items) > 0:
             selected_index = items[0].row()
-            study = self.studies_list[selected_index]['data'][0][0]
-            if not hasattr(self, 'metadata'):
+            position = DicomExpressView.get_current_position(self.express_view)
+            study = self.studies_list[selected_index]['data'][0][position]
+            if hasattr(self, 'metadata'):
+                Metadata.update(self.metadata, study)
+            else:
                 self.metadata = Metadata(study)
             self.metadata.show()
 
     def onDeleteBarButtonClick(self, s):
         print("Delete", s)
-
-    def onEmailBarButtonClick(self, s):
-        print("Email", s)
