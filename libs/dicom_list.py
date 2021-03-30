@@ -1,5 +1,6 @@
+from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QEvent, Qt
-from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget
+from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTableWidgetItem
 from .dicom_express_view import DicomExpressView
 from .import_files import get_pixels
 
@@ -19,12 +20,47 @@ class DicomList(QTableWidget):
         ])
         self.viewport().installEventFilter(self)
 
+    def updateDicomList(self, studies_metadata, imported_studies):
+        i = 0
+        for study_metadata, study_data in zip(studies_metadata, imported_studies):
+            self.setRowCount(i + 1)
+            if i % 2 == 0:
+                bgr = "#FFFFFF"
+            else:
+                bgr = "#F2F4F9"
+            column_0 = QTableWidgetItem(study_metadata["patient_name"])
+            column_0.setBackground(QColor(bgr))
+            self.setItem(i, 0, column_0)
+            column_1 = QTableWidgetItem(study_metadata["patient_id"])
+            column_1.setBackground(QColor(bgr))
+            self.setItem(i, 1, column_1)
+            column_2 = QTableWidgetItem(
+                study_metadata["study_description"])
+            column_2.setBackground(QColor(bgr))
+            self.setItem(i, 2, column_2)
+            column_3 = QTableWidgetItem(study_metadata["modality"])
+            column_3.setBackground(QColor(bgr))
+            self.setItem(i, 3, column_3)
+            column_4 = QTableWidgetItem(study_metadata["study_id"])
+            column_4.setBackground(QColor(bgr))
+            self.setItem(i, 4, column_4)
+            column_5 = QTableWidgetItem(study_metadata["study_date"])
+            column_5.setBackground(QColor(bgr))
+            self.setItem(i, 5, column_5)
+            column_6 = QTableWidgetItem(study_metadata["study_time"])
+            column_6.setBackground(QColor(bgr))
+            self.setItem(i, 6, column_6)
+            self.resizeColumnsToContents()
+            i += 1
+        self.studies_list = imported_studies
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
     def eventFilter(self, source, event):
         if (event.type() == QEvent.MouseButtonPress and
                 event.buttons() == Qt.LeftButton and source is self.viewport()):
             item = self.itemAt(event.pos())
             if item is not None:
-                self.study_data = self.studies_list[int(item.row())]["data"][0]
+                self.study_data = self.studies_list[int(item.row())][0]
                 if 'WindowCenter' in self.study_data and 'WindowWidth' in self.study_data:
                     level = self.study_data.WindowCenter
                     window = self.study_data.WindowWidth

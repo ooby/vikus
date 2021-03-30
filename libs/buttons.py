@@ -25,6 +25,7 @@ def buttons(window_class, toolbar):
         QIcon("icons/share_32.png"), "Share", window_class)
     share_button_action.setStatusTip("Share")
     share_button_action.setText("Share")
+    share_button_action.setEnabled(False)
     share_button_action.triggered.connect(window_class.onShareBarButtonClick)
     toolbar.addAction(share_button_action)
 
@@ -34,6 +35,7 @@ def buttons(window_class, toolbar):
         QIcon("icons/query_32.png"), "Query/Retrieve", window_class)
     query_button_action.setStatusTip("Query/Retrieve")
     query_button_action.setText("Query")
+    query_button_action.setEnabled(False)
     query_button_action.triggered.connect(window_class.onQueryBarButtonClick)
     toolbar.addAction(query_button_action)
 
@@ -41,6 +43,7 @@ def buttons(window_class, toolbar):
         QIcon("icons/send_32.png"), "Send", window_class)
     send_button_action.setStatusTip("Send")
     send_button_action.setText("Send")
+    send_button_action.setEnabled(False)
     send_button_action.triggered.connect(window_class.onSendBarButtonClick)
     toolbar.addAction(send_button_action)
 
@@ -50,6 +53,7 @@ def buttons(window_class, toolbar):
         QIcon("icons/anonymize_32.png"), "Anonymize", window_class)
     anonymize_button_action.setStatusTip("Anonymize")
     anonymize_button_action.setText("Anonymize")
+    anonymize_button_action.setEnabled(False)
     anonymize_button_action.triggered.connect(
         window_class.onAnonymizeBarButtonClick)
     toolbar.addAction(anonymize_button_action)
@@ -58,6 +62,7 @@ def buttons(window_class, toolbar):
         QIcon("icons/burn_32.png"), "Burn", window_class)
     burn_button_action.setStatusTip("Burn")
     burn_button_action.setText("Burn")
+    burn_button_action.setEnabled(False)
     burn_button_action.triggered.connect(window_class.onBurnBarButtonClick)
     toolbar.addAction(burn_button_action)
 
