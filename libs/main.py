@@ -1,8 +1,8 @@
 import numpy as np
 import os
 from PyQt5.QtCore import QSize, QThreadPool
-from PyQt5.QtGui import QColor, QFontDatabase
-from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QTableWidgetItem, QToolBar, QStatusBar, QWidget
+from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QMessageBox, QToolBar, QStatusBar, QWidget
 from .buttons import buttons
 from .dicom_express_view import DicomExpressView
 from .dicom_list import DicomList
@@ -56,46 +56,20 @@ class MainWindow(QMainWindow):
         if len(dicom_path) > 0 and dicom_path is not None:
             dicom_files = read_filenames(dicom_path)
             imported_studies = get_studies(dicom_files)
-            imported_studies_metadata = get_studies_metadata(imported_studies)
-            i = len(self.studies_list)
-            for study_metadata, study_data in zip(imported_studies_metadata, imported_studies):
-                self.studies_navigation_list.setRowCount(i + 1)
-                if i % 2 == 0:
-                    bgr = "#FFFFFF"
-                else:
-                    bgr = "#F2F4F9"
-                column_0 = QTableWidgetItem(study_metadata["patient_name"])
-                column_0.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 0, column_0)
-                column_1 = QTableWidgetItem(study_metadata["patient_id"])
-                column_1.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 1, column_1)
-                column_2 = QTableWidgetItem(
-                    study_metadata["study_description"])
-                column_2.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 2, column_2)
-                column_3 = QTableWidgetItem(study_metadata["modality"])
-                column_3.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 3, column_3)
-                column_4 = QTableWidgetItem(study_metadata["study_id"])
-                column_4.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 4, column_4)
-                column_5 = QTableWidgetItem(study_metadata["study_date"])
-                column_5.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 5, column_5)
-                column_6 = QTableWidgetItem(study_metadata["study_time"])
-                column_6.setBackground(QColor(bgr))
-                self.studies_navigation_list.setItem(i, 6, column_6)
-                self.studies_navigation_list.resizeColumnsToContents()
-                self.studies_list.append({
-                    "id": i,
-                    "data": study_data
-                })
-                i += 1
-            study = self.studies_list[0]["data"][0]
+            if len(self.studies_list) > 1:
+                self.studies_list += imported_studies
+            else:
+                self.studies_list = imported_studies
+            studies_metadata = get_studies_metadata(self.studies_list)
+            DicomList.updateDicomList(
+                self.studies_navigation_list, studies_metadata, self.studies_list)
+            study = self.studies_list[0][0]
             if 'WindowCenter' in study and 'WindowWidth' in study:
                 level = study.WindowCenter
                 window = study.WindowWidth
+                if len(np.array(level)) > 1 and len(np.array(window)) > 1:
+                    level = level[1]
+                    window = window[1]
             else:
                 level = -5000
                 window = 0
@@ -115,9 +89,9 @@ class MainWindow(QMainWindow):
             if len(dicom_path) > 0:
                 studies_to_export = []
                 for export_index in export_indexes:
-                    for study in self.studies_list:
-                        if int(study["id"]) == int(export_index):
-                            studies_to_export.append(study["data"])
+                    for i, study in enumerate(self.studies_list):
+                        if i == int(export_index):
+                            studies_to_export.append(study)
                 for study_to_export in studies_to_export:
                     for series in study_to_export:
                         for i, sop_instance in enumerate(series):
@@ -152,7 +126,7 @@ class MainWindow(QMainWindow):
         if len(items) > 0:
             selected_index = items[0].row()
             position = DicomExpressView.get_current_position(self.express_view)
-            study = self.studies_list[selected_index]['data'][0][position]
+            study = self.studies_list[selected_index][0][position]
             if hasattr(self, 'metadata'):
                 Metadata.update(self.metadata, study)
             else:
@@ -160,4 +134,15 @@ class MainWindow(QMainWindow):
             self.metadata.show()
 
     def onDeleteBarButtonClick(self, s):
-        print("Delete", s)
+        items = self.studies_navigation_list.selectedIndexes()
+        if len(items) > 0:
+            selected_index = items[0].row()
+            qm = QMessageBox
+            answer = qm.question(
+                self, "Study Deletion", "Are You sure delete selected study?", qm.Yes | qm.No)
+            if answer == qm.Yes:
+                self.studies_list.pop(selected_index)
+                studies_metadata = get_studies_metadata(self.studies_list)
+                DicomList.updateDicomList(
+                    self.studies_navigation_list, studies_metadata, self.studies_list)
+                self.statusBar.showMessage("Study deleted. Ready")
