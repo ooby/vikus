@@ -11,7 +11,7 @@ class DicomExpressView(QLabel):
         self.studies_list = studies_list
         self.pool = pool
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
         qimage = QImage(image, image.shape[1],
                         image.shape[0], QImage.Format_RGB888)
         self.pixmap = QPixmap(qimage)
@@ -80,16 +80,17 @@ class DicomExpressView(QLabel):
         return super(DicomExpressView, self).mouseMoveEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
-        delta = event.angleDelta().y()
-        if delta < 0:
-            self.position += 1
-            if self.position > self.pixels_length - 1:
-                self.position = 0
-        else:
-            self.position -= 1
-            if self.position < 1:
-                self.position = self.pixels_length - 1
-        self.updatePixmap(self.position)
+        if hasattr(self, 'position'):
+            delta = event.angleDelta().y()
+            if delta < 0:
+                self.position += 1
+                if self.position > self.pixels_length - 1:
+                    self.position = 0
+            else:
+                self.position -= 1
+                if self.position < 1:
+                    self.position = self.pixels_length - 1
+            self.updatePixmap(self.position)
         return super(DicomExpressView, self).wheelEvent(event)
 
     def get_current_position(self):
