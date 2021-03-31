@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTable
 class Metadata(QWidget):
     def __init__(self, study, *args, **kwargs):
         super(Metadata, self).__init__(*args, **kwargs)
-        self.setStyleSheet("background-color: #f1f2fa;")
+        self.setStyleSheet("background-color: rgb(50, 50, 50); color: rgb(255, 255, 255)")
         self.setWindowTitle("Study Metadata")
         self.setMinimumSize(600, 720)
         
@@ -29,9 +29,9 @@ class Metadata(QWidget):
         i = 0
         for prop in study:
             if i % 2 == 0:
-                bgr = "#FFFFFF"
+                bgr = "#303030"
             else:
-                bgr = "#F2F4F9"
+                bgr = "#404040"
             column_0 = QTableWidgetItem(prop.name)
             column_0.setBackground(QColor(bgr))
             self.metadata_table.setItem(i, 0, column_0)

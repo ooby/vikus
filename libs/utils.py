@@ -3,6 +3,24 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QRunnable
 
 
+def get_level_window(series_item):
+    if hasattr(series_item, 'WindowCenter') and hasattr(series_item, 'WindowWidth'):
+        try:
+            level = np.array(
+                list(series_item.WindowCenter), dtype=np.int16)
+            window = np.array(
+                list(series_item.WindowWidth), dtype=np.int16)
+            level = level[0]
+            window = window[0]
+        except TypeError:
+            level = int(series_item.WindowCenter)
+            window = int(series_item.WindowWidth)
+    else:
+        level = -5000
+        window = 0
+    return level, window
+
+
 def get_rgb_pixels(pixels: np.ndarray, min_hu: int, max_hu: int) -> np.ndarray:
     pixels = np.where(pixels < min_hu, min_hu, pixels)
     pixels = np.where(pixels > max_hu, max_hu, pixels)
