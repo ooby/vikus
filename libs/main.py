@@ -17,16 +17,17 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.pool = QThreadPool.globalInstance()
         _id = QFontDatabase.addApplicationFont("fonts/Rokkitt-Light.ttf")
-        self.setStyleSheet("background-color: rgb(50, 50, 50); color: rgb(255, 255, 255);")
+        self.setStyleSheet(
+            "background-color: rgb(50, 50, 50); color: rgb(255, 255, 255);")
         self.setWindowTitle("IRIS Viewer")
-        self.setMinimumSize(1280, 720)
+        self.setMinimumSize(1376, 720)
         self.studies_list = []
         dummy = np.zeros((512, 512))
         self.express_pixels = dummy
         self.test_pixels = [dummy]
         self.express_view = DicomExpressView(
             self.pool, self.studies_list, self.express_pixels)
-        self.series_panel = SeriesPanel(self.test_pixels, self.express_view, self.pool)
+        self.series_panel = SeriesPanel(self.test_pixels, self.express_view)
         self.studies_navigation_list = DicomList(
             self.studies_list, self.series_panel)
 
@@ -77,7 +78,8 @@ class MainWindow(QMainWindow):
             DicomList.updateDicomList(
                 self.studies_navigation_list, studies_metadata, self.studies_list)
             study = self.studies_list[0][0]
-            SeriesPanel.updatePanel(self.series_panel, self.studies_list[0])
+            SeriesPanel.updatePanel(
+                self.series_panel, self.studies_list[0], -1)
             self.statusBar.showMessage("Studies imported. Ready")
 
     def onDicomExportBarButtonClick(self):
@@ -148,3 +150,9 @@ class MainWindow(QMainWindow):
                 DicomList.updateDicomList(
                     self.studies_navigation_list, studies_metadata, self.studies_list)
                 self.statusBar.showMessage("Study deleted. Ready")
+
+    def onHelpBarButtonClick(self):
+        pass
+
+    def onSettingsBarButtonClick(self):
+        pass

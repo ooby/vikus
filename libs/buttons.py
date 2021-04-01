@@ -74,3 +74,13 @@ def buttons(window_class, toolbar):
     delete_button = ToolbarButton(QIcon(
         "icons/delete_32.png"), "Delete", "Delete", window_class.onDeleteBarButtonClick)
     toolbar.addWidget(delete_button)
+
+    toolbar.addSeparator()
+
+    help_button = ToolbarButton(QIcon(
+        "icons/help_32.png"), "Help", "Help", window_class.onHelpBarButtonClick)
+    toolbar.addWidget(help_button)
+
+    settings_button = ToolbarButton(QIcon(
+        "icons/settings_32.png"), "Settings", "Settings", window_class.onSettingsBarButtonClick)
+    toolbar.addWidget(settings_button)
