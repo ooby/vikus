@@ -62,5 +62,5 @@ class DicomList(QTableWidget):
                 event.buttons() == Qt.LeftButton and source is self.viewport()):
             item = self.itemAt(event.pos())
             if item is not None:
-                SeriesPanel.updatePanel(self.series_panel, self.studies_list[int(item.row())])
+                SeriesPanel.updatePanel(self.series_panel, self.studies_list[int(item.row())], -1)
         return super(DicomList, self).eventFilter(source, event)
