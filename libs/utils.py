@@ -1,6 +1,8 @@
 from datetime import datetime
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QRunnable
+import traceback
+import sys
 
 
 def get_level_window(series_item):

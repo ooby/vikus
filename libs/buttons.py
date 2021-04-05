@@ -45,26 +45,31 @@ def buttons(window_class, toolbar):
 
     share_button = ToolbarButton(QIcon(
         "icons/share_32.png"), "Share", "Share", window_class.onShareBarButtonClick)
+    share_button.setDisabled(True)
     toolbar.addWidget(share_button)
 
     toolbar.addSeparator()
 
     query_button = ToolbarButton(QIcon(
         "icons/query_32.png"), "Query", "Query/Retrieve", window_class.onQueryBarButtonClick)
+    query_button.setDisabled(True)
     toolbar.addWidget(query_button)
 
     send_button = ToolbarButton(QIcon(
         "icons/send_32.png"), "Send", "Send", window_class.onSendBarButtonClick)
+    send_button.setDisabled(True)
     toolbar.addWidget(send_button)
 
     toolbar.addSeparator()
 
     anonymize_button = ToolbarButton(QIcon(
         "icons/anonymize_32.png"), "Anonymize", "Anonymize", window_class.onAnonymizeBarButtonClick)
+    anonymize_button.setDisabled(True)
     toolbar.addWidget(anonymize_button)
 
     burn_button = ToolbarButton(QIcon(
         "icons/burn_32.png"), "Burn", "Burn", window_class.onBurnBarButtonClick)
+    burn_button.setDisabled(True)
     toolbar.addWidget(burn_button)
 
     metadata_button = ToolbarButton(QIcon(
@@ -79,8 +84,10 @@ def buttons(window_class, toolbar):
 
     help_button = ToolbarButton(QIcon(
         "icons/help_32.png"), "Help", "Help", window_class.onHelpBarButtonClick)
+    help_button.setDisabled(True)
     toolbar.addWidget(help_button)
 
     settings_button = ToolbarButton(QIcon(
         "icons/settings_32.png"), "Settings", "Settings", window_class.onSettingsBarButtonClick)
+    settings_button.setDisabled(True)
     toolbar.addWidget(settings_button)
