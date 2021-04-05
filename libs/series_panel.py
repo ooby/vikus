@@ -82,18 +82,46 @@ class SeriesPanel(QWidget):
         else:
             result = None
         return result
+    
+    def get_selected_series_index(self):
+        return self.selected_index
 
     def updatePanel(self, study_data, index):
         if index < 0:
             self.current_study = study_data
             self.selected_index = 0
+            selected_series = self.current_study[self.selected_index]
+            level, window = get_level_window(selected_series[0])
+            DicomExpressView.updateConvertPixmap(
+                self.express_view, selected_series, get_pixels(selected_series), 0, level, window)
+            self.series_info_layout.removeWidget(self.study_description)
+            self.series_info_layout.removeWidget(self.series_description)
+            self.series_info_layout.removeWidget(self.series_details)
+            self.study_description = QLabel(
+                f"Study: {str(selected_series[0].StudyDescription)}")
+            self.series_description = QLabel(
+                f"Series: {str(selected_series[0].SeriesDescription)}")
+            self.series_details = QLabel(
+                f"Images: {str(len(selected_series))}, Date: {str(selected_series[0].StudyDate)}")
+            self.series_info_layout.addWidget(self.study_description)
+            self.series_info_layout.addWidget(self.series_description)
+            self.series_info_layout.addWidget(self.series_details)
+            self.preview_pixmaps = []
+            for i, series in enumerate(self.current_study):
+                level, window = get_level_window(series[0])
+                pixels = get_pixels(series)
+                pixels = windowed_rgb(pixels[0], level, window)
+                qimage = QImage(pixels, pixels.shape[1],
+                                pixels.shape[0], QImage.Format_RGB888)
+                pixmap = QPixmap(qimage)
+                self.preview_pixmaps.insert(0, pixmap)
+            self.pixWidgets.updateWidgets(self.preview_pixmaps)
         else:
             if self.selected_index == index:
                 return
             self.selected_index = index
         selected_series = self.current_study[self.selected_index]
         level, window = get_level_window(selected_series[0])
-        # TODO: have segfault on series change!!!
         DicomExpressView.updateConvertPixmap(
             self.express_view, selected_series, get_pixels(selected_series), 0, level, window)
         self.series_info_layout.removeWidget(self.study_description)
@@ -108,13 +136,3 @@ class SeriesPanel(QWidget):
         self.series_info_layout.addWidget(self.study_description)
         self.series_info_layout.addWidget(self.series_description)
         self.series_info_layout.addWidget(self.series_details)
-        self.preview_pixmaps = []
-        for i, series in enumerate(self.current_study):
-            level, window = get_level_window(series[0])
-            pixels = get_pixels(series)
-            pixels = windowed_rgb(pixels[0], level, window)
-            qimage = QImage(pixels, pixels.shape[1],
-                            pixels.shape[0], QImage.Format_RGB888)
-            pixmap = QPixmap(qimage)
-            self.preview_pixmaps.insert(0, pixmap)
-        self.pixWidgets.updateWidgets(self.preview_pixmaps)

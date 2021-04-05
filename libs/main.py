@@ -130,7 +130,8 @@ class MainWindow(QMainWindow):
         if len(items) > 0:
             selected_index = items[0].row()
             position = DicomExpressView.get_current_position(self.express_view)
-            study = self.studies_list[selected_index][0][position]
+            series_index = SeriesPanel.get_selected_series_index(self.series_panel)
+            study = self.studies_list[selected_index][series_index][position]
             if hasattr(self, 'metadata'):
                 Metadata.update(self.metadata, study)
             else:
