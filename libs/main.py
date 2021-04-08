@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
         self.pool = QThreadPool.globalInstance()
         _id = QFontDatabase.addApplicationFont("fonts/Rokkitt-Light.ttf")
         self.setStyleSheet(
-            "background-color: rgb(50, 50, 50); color: rgb(255, 255, 255);")
+            "background-color: rgb(50, 50, 50); color: rgb(230, 230, 230);")
         self.setWindowTitle("IRIS Viewer")
         self.setMinimumSize(1376, 720)
         self.studies_list = []
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
         self.statusBar = QStatusBar(self)
-        self.statusBar.setStyleSheet("color: rgb(255, 255, 255);")
+        self.statusBar.setStyleSheet("color: rgb(230, 230, 230);")
         self.setStatusBar(self.statusBar)
 
     def onDicomImportBarButtonClick(self):

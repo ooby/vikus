@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTable
 class Metadata(QWidget):
     def __init__(self, study, *args, **kwargs):
         super(Metadata, self).__init__(*args, **kwargs)
-        self.setStyleSheet("background-color: rgb(50, 50, 50); color: rgb(255, 255, 255)")
+        self.setStyleSheet("background-color: rgb(50, 50, 50); color: rgb(230, 230, 230)")
         self.setWindowTitle("Study Metadata")
         self.setMinimumSize(600, 720)
         

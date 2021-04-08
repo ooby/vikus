@@ -9,7 +9,8 @@ from .series_panel import SeriesPanel
 class DicomList(QTableWidget):
     def __init__(self, studies_list, series_panel, *args, **kwargs):
         super(DicomList, self).__init__(*args, **kwargs)
-        self.setStyleSheet("color: rgb(255, 255, 255);")
+        # TODO: set vertical and horizontal cross-section background
+        self.setStyleSheet("QHeaderView::section { background-color: rgb(50, 50, 50) }; color: rgb(230, 230, 230);")
         self.studies_list = studies_list
         self.series_panel = series_panel
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
