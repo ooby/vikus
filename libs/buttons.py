@@ -22,7 +22,7 @@ class ToolbarButton(QWidget):
 
     def eventFilter(self, object, event):
         if event.type() == QEvent.Enter:
-            self.setStyleSheet("color: rgb(255, 255, 255);")
+            self.setStyleSheet("color: rgb(230, 230, 230);")
         elif event.type() == QEvent.Leave:
             self.setStyleSheet("color: rgb(180, 180, 180);")
         return False
