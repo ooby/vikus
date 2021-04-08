@@ -1,0 +1,20 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="icons">
+        <file alias="app_icon.ico">icon.ico</file>
+        <file alias="import_32.png">icons/import_32.png</file>
+        <file alias="export_32.png">icons/export_32.png</file>
+        <file alias="share_32.png">icons/share_32.png</file>
+        <file alias="query_32.png">icons/query_32.png</file>
+        <file alias="send_32.png">icons/send_32.png</file>
+        <file alias="anonymize_32.png">icons/anonymize_32.png</file>
+        <file alias="burn_32.png">icons/burn_32.png</file>
+        <file alias="metadata_32.png">icons/metadata_32.png</file>
+        <file alias="delete_32.png">icons/delete_32.png</file>
+        <file alias="help_32.png">icons/help_32.png</file>
+        <file alias="settings_32.png">icons/settings_32.png</file>
+    </qresource>
+    <qresource prefix="fonts">
+        <file alias="Rokkitt-Light.ttf">fonts/Rokkitt-Light.ttf</file>
+    </qresource>
+</RCC>

@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.pool = QThreadPool.globalInstance()
-        _id = QFontDatabase.addApplicationFont("fonts/Rokkitt-Light.ttf")
+        _id = QFontDatabase.addApplicationFont(":/fonts/Rokkitt-Light.ttf")
         self.setStyleSheet(
             "background-color: rgb(50, 50, 50); color: rgb(230, 230, 230);")
         self.setWindowTitle("IRIS Viewer")
