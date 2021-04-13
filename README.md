@@ -7,3 +7,7 @@
 - [PyQt5](https://www.riverbankcomputing.com/software/pyqt/)
 - [pydicom](https://pydicom.github.io/#pydicom)
 - [pynetdicom](https://pydicom.github.io/#pynetdicom)
+
+### For GNOME(Wayland) users:
+- Use [qtwayland5](https://packages.debian.org/stable/qtwayland5) or [qt5-wayland](https://archlinux.org/packages/?name=qt5-wayland) packages respectively
+- `export QT_QPA_PLATFORM=wayland`

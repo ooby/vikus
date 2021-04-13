@@ -2,3 +2,4 @@ numpy
 pydicom
 pynetdicom
 pyinstaller
+pyqt5
