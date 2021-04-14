@@ -1,21 +1,22 @@
+from itertools import groupby
 import numpy as np
 import os
 from PyQt5.QtCore import QSize, QThreadPool
 from PyQt5.QtGui import QFontDatabase
-from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QMessageBox, QToolBar, QStatusBar, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QMainWindow, QMessageBox, QProgressBar, QToolBar, QStatusBar, QVBoxLayout, QWidget
 from .buttons import buttons
 from .dicom_express_view import DicomExpressView
 from .dicom_list import DicomList
-from .import_files import get_pixels, get_studies, read_filenames
+from .import_files import get_pixels, get_study, read_filenames, series_projection, study_projection
 from .metadata import Metadata
 from .series_panel import SeriesPanel
-from .utils import get_studies_metadata
+from .utils import get_studies_metadata, Worker
 
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self.pool = QThreadPool.globalInstance()
+        self.__pool = QThreadPool.globalInstance()
         _id = QFontDatabase.addApplicationFont(":/fonts/Rokkitt-Light.ttf")
         self.setStyleSheet(
             "background-color: rgb(50, 50, 50); color: rgb(230, 230, 230);")
@@ -26,7 +27,7 @@ class MainWindow(QMainWindow):
         self.express_pixels = dummy
         self.test_pixels = [dummy]
         self.express_view = DicomExpressView(
-            self.pool, self.studies_list, self.express_pixels)
+            self.__pool, self.studies_list, self.express_pixels)
         self.series_panel = SeriesPanel(self.test_pixels, self.express_view)
         self.studies_navigation_list = DicomList(
             self.studies_list, self.series_panel)
@@ -62,25 +63,63 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
         self.statusBar = QStatusBar(self)
+        self.progressBar = QProgressBar()
+        self.statusBar.addPermanentWidget(self.progressBar)
+        self.progressBar.setGeometry(30, 40, 150, 25)
+        self.progressBar.setValue(0)
+        self.progressBar.setRange(0, 100)
         self.statusBar.setStyleSheet("color: rgb(230, 230, 230);")
         self.setStatusBar(self.statusBar)
+
+    def __worker_wrapper(self, progress_callback):
+        overall = len(self.__import_candidates_filenames)
+        studies = []
+        for i, candidate_filenames in enumerate(self.__import_candidates_filenames):
+            percent = i // (overall / 100)
+            sop_data = get_study(candidate_filenames)
+            studies.append(sop_data)
+            progress_callback.emit(percent)
+        result = []
+        for item in [list(it) for k, it in groupby(studies, study_projection)]:
+            groupped_by_series = [
+                list(it) for k, it in groupby(item, series_projection)]
+            result.append(groupped_by_series)
+        for study in result:
+            for series in study:
+                series.sort(key=lambda x: float(
+                    x.ImagePositionPatient[2]), reverse=True)
+        return result
+
+    def __progress(self, n):
+        self.progressBar.setValue(n)
+
+    def __process_result(self, res):
+        if len(self.studies_list) >= 1:
+            self.studies_list += res
+        else:
+            self.studies_list = res
+
+    def __process_complete(self):
+        studies_metadata = get_studies_metadata(self.studies_list)
+        DicomList.updateDicomList(
+            self.studies_navigation_list, studies_metadata, self.studies_list)
+        SeriesPanel.updatePanel(self.series_panel, self.studies_list[0], -1)
+        self.progressBar.setValue(0)
+        self.progressBar.setRange(0, 100)
+        self.statusBar.showMessage("Studies imported. Ready")
+
+    def __load_scans_data(self):
+        worker = Worker(self.__worker_wrapper)
+        worker.signals.result.connect(self.__process_result)
+        worker.signals.finished.connect(self.__process_complete)
+        worker.signals.progress.connect(self.__progress)
+        self.__pool.start(worker)
 
     def onDicomImportBarButtonClick(self):
         dicom_path = QFileDialog.getExistingDirectory(self, "Select Folder")
         if len(dicom_path) > 0 and dicom_path is not None:
-            dicom_files = read_filenames(dicom_path)
-            imported_studies = get_studies(dicom_files)
-            if len(self.studies_list) >= 1:
-                self.studies_list += imported_studies
-            else:
-                self.studies_list = imported_studies
-            studies_metadata = get_studies_metadata(self.studies_list)
-            DicomList.updateDicomList(
-                self.studies_navigation_list, studies_metadata, self.studies_list)
-            study = self.studies_list[0][0]
-            SeriesPanel.updatePanel(
-                self.series_panel, self.studies_list[0], -1)
-            self.statusBar.showMessage("Studies imported. Ready")
+            self.__import_candidates_filenames = read_filenames(dicom_path)
+            self.__load_scans_data()
 
     def onDicomExportBarButtonClick(self):
         items = self.studies_navigation_list.selectedIndexes()
@@ -130,7 +169,8 @@ class MainWindow(QMainWindow):
         if len(items) > 0:
             selected_index = items[0].row()
             position = DicomExpressView.get_current_position(self.express_view)
-            series_index = SeriesPanel.get_selected_series_index(self.series_panel)
+            series_index = SeriesPanel.get_selected_series_index(
+                self.series_panel)
             study = self.studies_list[selected_index][series_index][position]
             if hasattr(self, 'metadata'):
                 Metadata.update(self.metadata, study)
@@ -139,6 +179,7 @@ class MainWindow(QMainWindow):
             self.metadata.show()
 
     def onDeleteBarButtonClick(self):
+        # TODO: remove pixels from express_view after deletion
         items = self.studies_navigation_list.selectedIndexes()
         if len(items) > 0:
             selected_index = items[0].row()

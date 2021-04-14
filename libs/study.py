@@ -13,7 +13,7 @@ class Study():
             self.__current_series[0])
         self.__calc_rgb()
 
-    def __worker_wrapper(self):
+    def __worker_wrapper(self, progress_callback):
         return windowed_rgb(self.__pixels, self.__level, self.__window)
 
     def __process_result(self, res):

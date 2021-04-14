@@ -37,6 +37,15 @@ def read_filenames(path: str) -> List:
     ]
 
 
+def get_study(study_filename: str):
+    data = pydicom.read_file(study_filename, force=True)
+    if not hasattr(data, "StudyDescription"):
+        data.StudyDescription = "default"
+    if not hasattr(data, "SeriesDescription"):
+        data.SeriesDescription = "default"
+    return data
+
+
 def get_studies(dicom_files: List[str]) -> List:
     """
     Read DICOM-files, group by StudyDescription and SeriesDescription
