@@ -1,8 +1,7 @@
 from datetime import datetime
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QRunnable
-import traceback
-import sys
+import traceback, sys
 
 
 def get_level_window(series_item):
@@ -82,6 +81,7 @@ class WorkerSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
+    progress = pyqtSignal(int)
 
 
 class Worker(QRunnable):
@@ -92,8 +92,10 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
+        self.kwargs['progress_callback'] = self.signals.progress
+
     @pyqtSlot()
-    def run(self) -> np.ndarray:
+    def run(self):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except:

@@ -18,7 +18,7 @@ class DicomExpressView(QLabel):
         self.installEventFilter(self)
         self.setPixmap(self.pixmap)
 
-    def worker_wrapper(self):
+    def worker_wrapper(self, progress_callback):
         return windowed_rgb(self.pixels, self.level, self.window)
 
     def process_result(self, res):
