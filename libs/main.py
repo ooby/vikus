@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
         if len(dicom_path) > 0 and dicom_path is not None:
             dicom_files = read_filenames(dicom_path)
             imported_studies = get_studies(dicom_files)
-            if len(self.studies_list) > 1:
+            if len(self.studies_list) >= 1:
                 self.studies_list += imported_studies
             else:
                 self.studies_list = imported_studies
