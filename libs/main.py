@@ -10,6 +10,8 @@ from .dicom_list import DicomList
 from .import_files import get_pixels, get_study, read_filenames, series_projection, study_projection
 from .metadata import Metadata
 from .series_panel import SeriesPanel
+from .study import Study
+from .study_list import StudyList
 from .utils import get_studies_metadata, Worker
 
 
@@ -26,8 +28,7 @@ class MainWindow(QMainWindow):
         dummy = np.zeros((512, 512))
         self.express_pixels = dummy
         self.test_pixels = [dummy]
-        self.express_view = DicomExpressView(
-            self.__pool, self.studies_list, self.express_pixels)
+        self.express_view = DicomExpressView(self.__pool, self.express_pixels)
         self.series_panel = SeriesPanel(self.test_pixels, self.express_view)
         self.studies_navigation_list = DicomList(
             self.studies_list, self.series_panel)
@@ -72,30 +73,35 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.statusBar)
 
     def __worker_wrapper(self, progress_callback):
+        study_candidate = []
         overall = len(self.__import_candidates_filenames)
-        studies = []
-        for i, candidate_filenames in enumerate(self.__import_candidates_filenames):
+        for i, candidate_filename in enumerate(self.__import_candidates_filenames):
             percent = i // (overall / 100)
-            sop_data = get_study(candidate_filenames)
-            studies.append(sop_data)
             progress_callback.emit(percent)
-        result = []
-        for item in [list(it) for k, it in groupby(studies, study_projection)]:
+            sop_data = get_study(candidate_filename)
+            study_candidate.append(sop_data)
+        groupped_candidate = []
+        for item in [list(it) for k, it in groupby(study_candidate, study_projection)]:
             groupped_by_series = [
                 list(it) for k, it in groupby(item, series_projection)]
-            result.append(groupped_by_series)
-        for study in result:
-            for series in study:
-                series.sort(key=lambda x: float(
-                    x.ImagePositionPatient[2]), reverse=True)
-        return result
+            groupped_candidate.append(groupped_by_series)
+        self.statusBar.showMessage("Processing study data. Please wait...")
+        studies = StudyList()
+        overall = len(groupped_candidate)
+        for i, study in enumerate(groupped_candidate):
+            _study = Study(study)
+            studies.append_study(_study)
+            percent = i // (overall / 100)
+            progress_callback.emit(percent)
+        return studies
 
     def __progress(self, n):
         self.progressBar.setValue(n)
 
     def __process_result(self, res):
         if len(self.studies_list) >= 1:
-            self.studies_list += res
+            for item in res:
+                self.studies_list.append_study(item)
         else:
             self.studies_list = res
 
@@ -118,6 +124,7 @@ class MainWindow(QMainWindow):
     def onDicomImportBarButtonClick(self):
         dicom_path = QFileDialog.getExistingDirectory(self, "Select Folder")
         if len(dicom_path) > 0 and dicom_path is not None:
+            self.statusBar.showMessage("Reading files. Please wait...")
             self.__import_candidates_filenames = read_filenames(dicom_path)
             self.__load_scans_data()
 
@@ -134,7 +141,7 @@ class MainWindow(QMainWindow):
                 for export_index in export_indexes:
                     for i, study in enumerate(self.studies_list):
                         if i == int(export_index):
-                            studies_to_export.append(study)
+                            studies_to_export.append(study.study_data)
                 for study_to_export in studies_to_export:
                     for series in study_to_export:
                         for i, sop_instance in enumerate(series):
@@ -171,7 +178,7 @@ class MainWindow(QMainWindow):
             position = DicomExpressView.get_current_position(self.express_view)
             series_index = SeriesPanel.get_selected_series_index(
                 self.series_panel)
-            study = self.studies_list[selected_index][series_index][position]
+            study = self.studies_list[selected_index].study_data[series_index][position]
             if hasattr(self, 'metadata'):
                 Metadata.update(self.metadata, study)
             else:
@@ -180,6 +187,7 @@ class MainWindow(QMainWindow):
 
     def onDeleteBarButtonClick(self):
         # TODO: remove pixels from express_view after deletion
+        # TODO: add export progress bar
         items = self.studies_navigation_list.selectedIndexes()
         if len(items) > 0:
             selected_index = items[0].row()

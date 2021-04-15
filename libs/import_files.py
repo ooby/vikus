@@ -46,32 +46,6 @@ def get_study(study_filename: str):
     return data
 
 
-def get_studies(dicom_files: List[str]) -> List:
-    """
-    Read DICOM-files, group by StudyDescription and SeriesDescription
-    Returns nested Lists: List of Sudies with List of Series with List of Instances
-    """
-    dicom_datas = [
-        pydicom.read_file(file, force=True)
-        for file in dicom_files
-    ]
-    for dicom_data in dicom_datas:
-        if not 'StudyDescription' in dicom_data:
-            dicom_data.StudyDescription = "default"
-        if not 'SeriesDescription' in dicom_data:
-            dicom_data.SeriesDescription = "default"
-    studies = []
-    for item in [list(it) for k, it in groupby(dicom_datas, study_projection)]:
-        groupped_by_series = [list(it)
-                              for k, it in groupby(item, series_projection)]
-        studies.append(groupped_by_series)
-    for study in studies:
-        for series in study:
-            series.sort(key=lambda x: float(
-                x.ImagePositionPatient[2]), reverse=True)
-    return studies
-
-
 def get_pixels(slices: np.ndarray) -> np.ndarray:
     '''Get pixel data from DICOM-file Dataset'''
     try:
