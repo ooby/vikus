@@ -6,9 +6,8 @@ from .utils import windowed_rgb, Worker
 
 
 class DicomExpressView(QLabel):
-    def __init__(self, pool, studies_list, image, *args, **kwargs):
+    def __init__(self, pool, image, *args, **kwargs):
         super(DicomExpressView, self).__init__(*args, **kwargs)
-        self.studies_list = studies_list
         self.pool = pool
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
@@ -44,13 +43,13 @@ class DicomExpressView(QLabel):
     def mouseReleaseEvent(self, event):
         if hasattr(self, 'pixels') and len(self.pixels) > 0:
             # TODO: check near 10 slices RGB-form in case of multiple conversion
-            neg_delta = pos_delta = 10
-            if self.position - neg_delta < 0:
-                neg_delta = self.position
-            if len(self.pixels) - self.position < pos_delta:
-                pos_delta = len(self.pixels) - 1 - self.position
-            self.rgb_pixels[self.position - neg_delta:self.position + pos_delta] = windowed_rgb(
-                self.pixels[self.position - neg_delta:self.position + pos_delta], self.level, self.window)
+            # neg_delta = pos_delta = 10
+            # if self.position - neg_delta < 0:
+            #     neg_delta = self.position
+            # if len(self.pixels) - self.position < pos_delta:
+            #     pos_delta = len(self.pixels) - 1 - self.position
+            # self.rgb_pixels[self.position - neg_delta:self.position + pos_delta] = windowed_rgb(
+            #     self.pixels[self.position - neg_delta:self.position + pos_delta], self.level, self.window)
             self.runTasks()
         return super(DicomExpressView, self).mousePressEvent(event)
 
@@ -64,6 +63,7 @@ class DicomExpressView(QLabel):
                 y_diff = curr_y - self.prev_y
                 self.prev_y = curr_y
                 self.window += x_diff
+                # TODO: check level window boundaries
                 if self.window < 0:
                     self.window = 0
                 if self.window > 4095:
@@ -74,8 +74,7 @@ class DicomExpressView(QLabel):
                     self.level = 2047
                 self.level -= y_diff
         pixels = self.pixels[self.position]
-        self.rgb_pixels[self.position] = windowed_rgb(
-            pixels, self.level, self.window)
+        self.rgb_pixels[self.position] = windowed_rgb(pixels, self.level, self.window)
         self.updatePixmap(self.position)
         return super(DicomExpressView, self).mouseMoveEvent(event)
 
@@ -101,23 +100,15 @@ class DicomExpressView(QLabel):
         self.createPixmap(pixels_to_set)
         self.setPixmap(self.pixmap.scaled(self.size(), Qt.KeepAspectRatio))
 
-    def updateConvertPixmap(self, study, image, position, level, window):
+    def updateConvertPixmap(self, study, position):
         self.study_data = study
-        self.pixels = image
-        if level == -5000 and window == 0:
-            self.window = abs(np.max(self.pixels) - np.min(self.pixels))
-            self.level = np.max(self.pixels) - (self.window // 2)
-        else:
-            self.window = window
-            self.level = level
-        self.pixels_length = len(image)
+        self.pixels = study.pixels
+        self.level, self.window = study.level_window
+        self.pixels_length = study.pixels.shape[0]
         self.position = position
-        self.rgb_pixels = np.zeros((*self.pixels.shape, 3), dtype=np.uint8)
-        pixels = self.pixels[self.position]
-        self.rgb_pixels[self.position] = windowed_rgb(
-            pixels, self.level, self.window)
-        self.updatePixmap(self.position)
-        self.runTasks()
+        self.rgb_pixels = study.rgb_pixels
+        self.rgb_pixels[self.position] = windowed_rgb(self.pixels[self.position], self.level, self.window)
+        self.updatePixmap(position)
 
     def eventFilter(self, source, event):
         if (source is self and event.type() == QEvent.Resize):
@@ -149,10 +140,10 @@ class DicomExpressView(QLabel):
         qp.drawText(position, f"Image: {self.position}/{len(self.pixels)}")
         position = QPoint(5, 478)
         qp.drawText(
-            position, f"{str(self.study_data[0].SeriesDescription).strip()}")
+            position, f"{str(self.study_data.current_series[0].SeriesDescription).strip()}")
         position = QPoint(5, 489)
         qp.drawText(
-            position, f"{str(self.study_data[0].StudyDescription).strip()}")
+            position, f"{str(self.study_data.current_series[0].StudyDescription).strip()}")
         position = QPoint(5, 500)
-        qp.drawText(position, f"{str(self.study_data[0].PatientName).strip()}")
+        qp.drawText(position, f"{str(self.study_data.current_series[0].PatientName).strip()}")
         qp.end()

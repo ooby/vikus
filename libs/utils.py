@@ -56,7 +56,7 @@ def get_studies_metadata(studies):
         study_id = ""
         study_date = ""
         study_time = ""
-        for series in study:
+        for series in study.study_data:
             for instance in series:
                 study_description = instance.StudyDescription
                 patient_name = instance.PatientName

@@ -1,8 +1,6 @@
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtWidgets import QAbstractItemView, QHeaderView, QTableWidget, QTableWidgetItem
-# from .dicom_express_view import DicomExpressView
-# from .import_files import get_pixels
 from .series_panel import SeriesPanel
 
 
@@ -25,7 +23,7 @@ class DicomList(QTableWidget):
 
     def updateDicomList(self, studies_metadata, imported_studies):
         i = 0
-        for study_metadata, study_data in zip(studies_metadata, imported_studies):
+        for study_metadata in studies_metadata:
             self.setRowCount(i + 1)
             if i % 2 == 0:
                 bgr = "#303030"
