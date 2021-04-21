@@ -142,9 +142,11 @@ class MainWindow(QMainWindow):
                     for i, study in enumerate(self.studies_list):
                         if i == int(export_index):
                             studies_to_export.append(study.study_data)
+                self.statusBar.showMessage("Exporting data. Please, wait...")
                 for study_to_export in studies_to_export:
                     for series in study_to_export:
                         for i, sop_instance in enumerate(series):
+                            percent = i * 100 // len(series)
                             study_description = str(
                                 sop_instance.StudyDescription).strip()
                             series_description = str(
@@ -154,6 +156,8 @@ class MainWindow(QMainWindow):
                             os.makedirs(os.path.abspath(os.path.join(
                                 dicom_path, study_description, series_description)), exist_ok=True)
                             sop_instance.save_as(image_filename)
+                            self.progressBar.setValue(percent)
+                self.progressBar.setValue(0)
                 self.statusBar.showMessage("Study exported. Ready")
 
     def onShareBarButtonClick(self):
@@ -186,8 +190,6 @@ class MainWindow(QMainWindow):
             self.metadata.show()
 
     def onDeleteBarButtonClick(self):
-        # TODO: remove pixels from express_view after deletion
-        # TODO: add export progress bar
         items = self.studies_navigation_list.selectedIndexes()
         if len(items) > 0:
             selected_index = items[0].row()
@@ -199,6 +201,7 @@ class MainWindow(QMainWindow):
                 studies_metadata = get_studies_metadata(self.studies_list)
                 DicomList.updateDicomList(
                     self.studies_navigation_list, studies_metadata, self.studies_list)
+                SeriesPanel.updatePanel(self.series_panel, self.studies_list[0], -1)
                 self.statusBar.showMessage("Study deleted. Ready")
 
     def onHelpBarButtonClick(self):
